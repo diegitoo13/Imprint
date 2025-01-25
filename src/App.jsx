@@ -4,6 +4,7 @@ import Footer from './components/Footer';
 import CommentModal from './components/CommentModal';
 import CommentList from './components/CommentList';
 import RandomMode from './components/RandomMode';
+import BadAppleASCII from './components/BadAppleASCII'; // Import BadAppleASCII
 
 import { db } from './firebase';
 import {
@@ -60,13 +61,16 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen text-black">
+    <div className="flex flex-col min-h-screen text-black relative">
       <Header
         onNewComment={() => setModalOpen(true)}
         viewMode={viewMode}
         toggleMode={toggleMode}
         onBadApple={handleBadApple} // Pass the handler to Header
       />
+
+      {/* Bad Apple ASCII Easter Egg */}
+      {badAppleActive && <BadAppleASCII isActive />}
 
       {/* Main Content */}
       {viewMode === 'random' ? (
