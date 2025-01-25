@@ -137,9 +137,8 @@ function BadAppleASCII({ isActive, containerRef }) {
         bottom: 0,
         pointerEvents: 'none',
         zIndex: 0,
-        // If you want a black background behind ASCII, uncomment:
-        backgroundColor: 'white',
-        color: 'black', // ASCII text color
+        backgroundColor: 'white !important', // ASCII background color
+        color: 'black !important', // ASCII text color
         overflow: 'hidden'
       }}
     >
