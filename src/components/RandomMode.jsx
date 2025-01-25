@@ -1,34 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import BadAppleASCII from './BadAppleASCII';
 
-function RandomMode({ comments }) {
+// We'll measure the containerRef to size ASCII accordingly
+function RandomMode({ comments, badAppleActive }) {
   const [flyingItems, setFlyingItems] = useState([]);
+  const containerRef = useRef(null); // for bounding box
 
-  // 1) On initial load or when "comments" changes,
-  //    create a flying item for each comment.
   useEffect(() => {
-    const initialItems = comments.map((comment) => createFlyingItem(comment));
+    const initialItems = comments.map(createFlyingItem);
     setFlyingItems(initialItems);
   }, [comments]);
 
-  // 2) Helper to create a random "flying item" from a Firestore comment
   function createFlyingItem(comment) {
-    // Random top in [0..80]% (adjust to your liking)
     const topPercent = Math.random() * 80;
-
-    // Random font size (in px) - you can also scale to screen width
     const minFont = 16;
-    const maxFont = 42; // e.g., bigger text possible
+    const maxFont = 42;
     const fontSize = Math.floor(Math.random() * (maxFont - minFont + 1)) + minFont;
-
-    // Random duration in [4..10] seconds
-    const duration = Math.floor(Math.random() * 7) + 4; // 4..10
-
-    // Unique key to help React re-render properly
+    const duration = Math.floor(Math.random() * 7) + 4; // 4..10 seconds
     const uniqueKey = `${comment.id}-${Math.random()}`;
-
     return {
-      originalComment: comment, // So we can re-create on end
+      originalComment: comment,
       uniqueKey,
       topPercent,
       fontSize,
@@ -36,16 +28,11 @@ function RandomMode({ comments }) {
     };
   }
 
-  // 3) When an item finishes scrolling, replace it with a new random item
   const handleAnimationEnd = (index) => {
     setFlyingItems((prev) => {
-      // get old item
       const oldItem = prev[index];
       if (!oldItem) return prev;
-      // create a new item from the same comment
       const newItem = createFlyingItem(oldItem.originalComment);
-
-      // replace that index in the array
       const newArray = [...prev];
       newArray[index] = newItem;
       return newArray;
@@ -54,32 +41,46 @@ function RandomMode({ comments }) {
 
   return (
     <div
-      className="relative bg-white overflow-hidden"
-      style={{ height: 'calc(100vh - 180px)', width: '100%' }}
+      ref={containerRef}
+      className="relative overflow-hidden"
+      style={{
+        height: 'calc(100vh - 180px)', // space for header+footer
+        width: '100%'
+      }}
     >
-      {flyingItems.map((item, i) => {
-        const { originalComment, uniqueKey, topPercent, fontSize, duration } = item;
+      {/* If Bad Apple is active, show ASCII behind everything */}
+      {badAppleActive && (
+        <BadAppleASCII
+          isActive
+          containerRef={containerRef} // pass the ref so ASCII can size itself
+        />
+      )}
 
-        // Combine message + author
-        const textWithAuthor = `${originalComment.content || ''} -${
-          originalComment.name || 'Anonymous'
-        }`;
+      {/* Floating comments (remove white bg so ASCII is visible) */}
+      <div className="relative z-10 w-full h-full">
+        {flyingItems.map((item, i) => {
+          const { originalComment, uniqueKey, topPercent, fontSize, duration } = item;
+          const textWithAuthor = `${originalComment.content || ''} - ${
+            originalComment.name || 'Anonymous'
+          }`;
 
-        return (
-          <div
-            key={uniqueKey}
-            className="danmaku-item"
-            style={{
-              top: `${topPercent}vh`,
-              fontSize: fontSize,
-              animation: `danmakuScroll ${duration}s linear forwards`
-            }}
-            onAnimationEnd={() => handleAnimationEnd(i)}
-          >
-            <ReactMarkdown>{textWithAuthor}</ReactMarkdown>
-          </div>
-        );
-      })}
+          return (
+            <div
+              key={uniqueKey}
+              style={{
+                position: 'absolute',
+                top: `${topPercent}vh`,
+                fontSize: fontSize,
+                animation: `danmakuScroll ${duration}s linear forwards`,
+                color: badAppleActive ? 'red' : 'black'
+              }}
+              onAnimationEnd={() => handleAnimationEnd(i)}
+            >
+              <ReactMarkdown>{textWithAuthor}</ReactMarkdown>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

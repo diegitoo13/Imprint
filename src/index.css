@@ -10,15 +10,6 @@ body {
   /* Remove display:flex here to avoid centering everything */
 }
 
-/* Optional: If you want to support light/dark automatically: */
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-}
-
-
 @keyframes danmakuScroll {
   0% {
     transform: translateX(110vw); /* Start well off the right edge */

@@ -18,7 +18,8 @@ import {
 function App() {
   const [comments, setComments] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState('list'); // default to list
+  const [viewMode, setViewMode] = useState('random'); // default to random
+  const [badAppleActive, setBadAppleActive] = useState(false); // State to control Bad Apple
 
   // Real-time listener for Firestore "comments"
   useEffect(() => {
@@ -53,17 +54,23 @@ function App() {
     setViewMode((prev) => (prev === 'random' ? 'list' : 'random'));
   };
 
+  // Handler to activate Bad Apple
+  const handleBadApple = () => {
+    setBadAppleActive(true);
+  };
+
   return (
     <div className="flex flex-col min-h-screen text-black">
       <Header
         onNewComment={() => setModalOpen(true)}
         viewMode={viewMode}
         toggleMode={toggleMode}
+        onBadApple={handleBadApple} // Pass the handler to Header
       />
 
       {/* Main Content */}
       {viewMode === 'random' ? (
-        <RandomMode comments={comments} />
+        <RandomMode comments={comments} badAppleActive={badAppleActive} />
       ) : (
         <CommentList comments={comments} />
       )}

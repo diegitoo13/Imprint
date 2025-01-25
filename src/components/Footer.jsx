@@ -7,7 +7,7 @@ function Footer() {
         Made with <span className="text-red-500">♥</span> by Diego
       </span>
       <a
-        href="https://github.com/diegitoo13/Imprint"
+        href="https://github.com/diegitoo13/imprint"
         className="text-blue-500 hover:underline"
         target="_blank"
         rel="noreferrer"
