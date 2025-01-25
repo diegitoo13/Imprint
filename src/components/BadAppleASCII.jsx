@@ -1,3 +1,4 @@
+// src/components/BadAppleASCII.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import LZString from 'lz-string';
 
@@ -14,24 +15,38 @@ function BadAppleASCII({ isActive, containerRef }) {
   useEffect(() => {
     if (!isActive) return;
 
+    console.log('BadAppleASCII activated');
+
     // 1) Fetch & decompress frames
     fetch('/framesData.lz')
-      .then((res) => res.text())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+        return res.text();
+      })
       .then((compressedData) => {
+        console.log('Fetched framesData.lz successfully');
         const decompressed = LZString.decompressFromBase64(compressedData);
         if (!decompressed) {
           console.error('Failed to decompress framesData.lz');
+          setAsciiText('Failed to load animation.');
           return;
         }
         const framesArray = JSON.parse(decompressed);
+        console.log(`Decompressed framesData.lz, total frames: ${framesArray.length}`);
         setFrames(framesArray);
       })
-      .catch((err) => console.error('Error fetching framesData.lz:', err));
+      .catch((err) => {
+        console.error('Error fetching framesData.lz:', err);
+        setAsciiText('Error loading animation.');
+      });
   }, [isActive]);
 
   useEffect(() => {
     if (!frames || !isActive) return;
 
+    console.log('Starting BadAppleASCII animation');
     setStartTime(performance.now());
     requestWakeLock();
 
@@ -41,7 +56,12 @@ function BadAppleASCII({ isActive, containerRef }) {
       setTimeout(() => {
         audioRef.current
           .play()
-          .catch((err) => console.warn('Audio autoplay blocked:', err));
+          .then(() => {
+            console.log('Audio played successfully');
+          })
+          .catch((err) => {
+            console.warn('Audio autoplay blocked:', err);
+          });
       }, 200);
     }
 
@@ -61,6 +81,7 @@ function BadAppleASCII({ isActive, containerRef }) {
       cancelAnimationFrame(requestRef.current);
       releaseWakeLock();
       setAsciiText('');
+      console.log('BadAppleASCII animation stopped');
     };
   }, [frames, isActive]);
 
@@ -79,18 +100,22 @@ function BadAppleASCII({ isActive, containerRef }) {
       // End of animation
       setAsciiText(frames[frames.length - 1].replace(/\\n/g, '\n'));
       releaseWakeLock();
+      console.log('BadAppleASCII animation completed');
     }
   }
 
   function adjustDisplaySize() {
-    if (!asciiContainerRef.current || !containerRef?.current) return;
+    if (!asciiContainerRef.current || !containerRef?.current) {
+      console.warn('Container reference is null. Skipping size adjustment.');
+      return;
+    }
 
-    // measure the bounding box of the parent container
+    // Measure the bounding box of the parent container
     const boundingRect = containerRef.current.getBoundingClientRect();
     const containerWidth = boundingRect.width;
     const containerHeight = boundingRect.height;
 
-    // keep 4:3 aspect ratio
+    // Keep 4:3 aspect ratio
     const aspectRatio = 4 / 3;
     let displayWidth = containerWidth;
     let displayHeight = containerWidth / aspectRatio;
@@ -100,15 +125,17 @@ function BadAppleASCII({ isActive, containerRef }) {
       displayWidth = displayHeight * aspectRatio;
     }
 
-    // scale font based on the container's width
+    // Scale font based on the container's width
     const fontSize = displayWidth / 62;
     asciiContainerRef.current.style.fontSize = `${fontSize}px`;
+    console.log(`Adjusted font size to ${fontSize}px`);
   }
 
   async function requestWakeLock() {
     if ('wakeLock' in navigator) {
       try {
         wakeLockRef.current = await navigator.wakeLock.request('screen');
+        console.log('Wake Lock acquired');
       } catch (err) {
         console.error('WakeLock Error:', err);
       }
@@ -119,6 +146,7 @@ function BadAppleASCII({ isActive, containerRef }) {
     if (wakeLockRef.current) {
       wakeLockRef.current.release().then(() => {
         wakeLockRef.current = null;
+        console.log('Wake Lock released');
       });
     }
   }
@@ -128,32 +156,12 @@ function BadAppleASCII({ isActive, containerRef }) {
   return (
     <div
       ref={asciiContainerRef}
-      // "absolute" so it fills the parent container (RandomMode)
+      className="absolute inset-0 flex items-center justify-center bg-white text-black pointer-events-none overflow-hidden"
       style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        pointerEvents: 'none',
-        zIndex: 0,
-        backgroundColor: 'white !important', // ASCII background color
-        color: 'black !important', // ASCII text color
-        overflow: 'hidden'
+        zIndex: -1, // Ensure it's behind floating comments
       }}
     >
-      <pre
-        style={{
-          margin: 0,
-          whiteSpace: 'pre',
-          lineHeight: 1.1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '100%',
-          height: '100%'
-        }}
-      >
+      <pre className="whitespace-pre-wrap text-center">
         {asciiText}
       </pre>
 
