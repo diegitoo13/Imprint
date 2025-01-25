@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Override default body styles for full-screen layout */
+body {
+  margin: 0;
+  min-height: 100vh;
+  width: 100%;
+  /* Remove display:flex here to avoid centering everything */
+}
+
+/* Optional: If you want to support light/dark automatically: */
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+}
+
+
+@keyframes danmakuScroll {
+  0% {
+    transform: translateX(110vw); /* Start well off the right edge */
+  }
+  100% {
+    transform: translateX(-150%); /* End well off the left edge */
+  }
+}
+
+.danmaku-item {
+  position: absolute;
+  white-space: nowrap;
+  pointer-events: none;
+  color: black;
+  animation-fill-mode: forwards; /* remain at final position */
+}
