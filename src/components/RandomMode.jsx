@@ -14,9 +14,9 @@ function RandomMode({ comments, badAppleActive }) {
   // Function to determine MAX_FLYING_ITEMS based on screen width
   const getMaxFlyingItems = (width) => {
     if (width <= 480) { // Small devices 
-      return 10;
-    } else if (width <= 768) { // Medium devices
       return 15;
+    } else if (width <= 768) { // Medium devices
+      return 18;
     } else { // Large devices
       return 20;
     }
@@ -102,8 +102,8 @@ function RandomMode({ comments, badAppleActive }) {
 
     if (windowSize.width) {
       if (windowSize.width <= 480) { // Small devices like iPhones
-        minFont = 12;
-        maxFont = 20;
+        minFont = 14;
+        maxFont = 22;
       } else if (windowSize.width <= 768) { // Medium devices like Tablets, Small Laptops
         minFont = 14;
         maxFont = 24;
