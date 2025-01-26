@@ -26,8 +26,21 @@ function Header({ onNewComment, viewMode, toggleMode, onBadApple }) {
   // 2. Bad Apple Easter Egg State (Five Clicks)
   // ---------------------------
   const [clickCount, setClickCount] = useState(0);
+  const [isBadAppleLoading, setIsBadAppleLoading] = useState(false); // Loading State
   const clickTimerRef = useRef(null);
   const clickThreshold = 2000; // 2 seconds to reset the count
+
+  // Apple Counter State
+  const [appleCounter, setAppleCounter] = useState(0);
+
+  // Define the letters of "Imprint" and their corresponding delay classes
+  const letters = ['I', 'm', 'p', 'r', 'i', 'n', 't'];
+  const delays = ['delay-100', 'delay-200', 'delay-300', 'delay-300', 'delay-500', 'delay-500', 'delay-700'];
+
+  const handleBadApple = () => {
+    onBadApple();
+    setIsBadAppleLoading(true); // Start loading animation
+  };
 
   const handleTitleClick = () => {
     setClickCount((prevCount) => prevCount + 1);
@@ -42,15 +55,32 @@ function Header({ onNewComment, viewMode, toggleMode, onBadApple }) {
       setClickCount(0);
     }, clickThreshold);
 
-    // If click count reaches 5, trigger onBadApple and reset the count
+    // If click count reaches 5, trigger handleBadApple and reset the count
     if (clickCount + 1 === 5) {
-      onBadApple();
+      handleBadApple();
       setClickCount(0);
       clearTimeout(clickTimerRef.current);
     }
   };
 
-  // Cleanup the timer when the component unmounts
+  // Apple Counter Logic
+  useEffect(() => {
+    let counterInterval;
+    if (isBadAppleLoading) {
+      counterInterval = setInterval(() => {
+        setAppleCounter((prevCount) => (prevCount < 4 ? prevCount + 1 : 1));
+      }, 500); // Change the interval duration as needed
+    } else {
+      setAppleCounter(0); // Reset counter when not loading
+    }
+
+    // Cleanup interval on component unmount or when loading stops
+    return () => {
+      if (counterInterval) clearInterval(counterInterval);
+    };
+  }, [isBadAppleLoading]);
+
+  // Cleanup the click timer when the component unmounts
   useEffect(() => {
     return () => {
       if (clickTimerRef.current) {
@@ -61,23 +91,53 @@ function Header({ onNewComment, viewMode, toggleMode, onBadApple }) {
 
   return (
     <header className="p-4 bg-white shadow flex items-center justify-between w-full relative">
-      {/* Title (Imprint) with 5-click detection */}
-      <h1
-        className="text-2xl font-bold text-black cursor-pointer select-none flex items-center"
-        onClick={handleTitleClick}
-        tabIndex="0"
-        role="button"
-        aria-label="Imprint - Click five times to activate Easter Egg"
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            handleTitleClick();
-          }
-        }}
-      >
-        Imprint
-        {/* Optional: Display click count for user feedback */}
-        {/* <span className="ml-2 text-sm text-gray-500">({clickCount}/5)</span> */}
-      </h1>
+      {/* Title (Imprint) with 5-click detection and animations */}
+      <div className="flex items-center">
+        <h1
+          className="text-2xl font-bold text-black cursor-pointer select-none flex items-center"
+          onClick={handleTitleClick}
+          tabIndex="0"
+          role="button"
+          aria-label="Imprint - Click five times to activate Easter Egg"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              handleTitleClick();
+            }
+          }}
+        >
+          {/* Split "Imprint" into individual letters and apply bounce animation */}
+          {letters.map((char, index) => (
+            <span
+              key={index}
+              className={`${isBadAppleLoading ? `${delays[index]} animate-bounce` : ''}`}
+              aria-hidden="true"
+            >
+              {char}
+            </span>
+          ))}
+        </h1>
+
+        {/* Remove the first four static apples */}
+        {/* 
+        {isBadAppleLoading && (
+          <div className="flex space-x-2 ml-4">
+            <span className="text-xl animate-bounce delay-100">🍎</span>
+            <span className="text-xl animate-bounce delay-200">🍎</span>
+            <span className="text-xl animate-bounce delay-300">🍎</span>
+            <span className="text-xl animate-bounce delay-500">🍎</span>
+          </div>
+        )}
+        */}
+
+        {/* Render apple counter */}
+        {isBadAppleLoading && (
+          <div className="flex space-x-1 ml-4">
+            {Array.from({ length: appleCounter }, (_, index) => (
+              <span key={index} className="text-xl animate-bounce">🍎</span>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Desktop Buttons (md+: show buttons inline) */}
       <div className="hidden md:flex gap-2">
@@ -123,8 +183,6 @@ function Header({ onNewComment, viewMode, toggleMode, onBadApple }) {
           </button>
         </div>
       )}
-
-
     </header>
   );
 }
