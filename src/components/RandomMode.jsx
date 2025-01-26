@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import SafeHtml from './SafeHtml'; // Import the SafeHtml component
 import BadAppleASCII from './BadAppleASCII';
@@ -7,75 +6,21 @@ function RandomMode({ comments, badAppleActive }) {
   const [flyingItems, setFlyingItems] = useState([]);
   const containerRef = useRef(null); // For bounding box
 
-  const MAX_FLYING_ITEMS = 20; // Limit the number of concurrent flying items
-
-  // Precompute cumulative weights for efficient weighted random selection
-  const [cumulativeWeights, setCumulativeWeights] = useState([]);
-  const [totalWeight, setTotalWeight] = useState(0);
-
+  // Create flying items based on comments
   useEffect(() => {
-    // Filter out comments with negative scores or handle as per your logic
-    const filteredComments = comments.filter(comment => comment.score > 0);
-
-    // Assign weights based on scores
-    const weights = filteredComments.map(comment => comment.score);
-
-    // Compute cumulative weights
-    let cumWeight = 0;
-    const cumWeights = weights.map(weight => {
-      cumWeight += weight;
-      return cumWeight;
-    });
-
-    setCumulativeWeights(cumWeights);
-    setTotalWeight(cumWeight);
+    console.log('RandomMode mounted with comments count:', comments.length);
+    const initialItems = comments.map(createFlyingItem);
+    setFlyingItems(initialItems);
   }, [comments]);
 
-  // Function to select a comment based on weighted random selection
-  const selectWeightedRandomComment = () => {
-    if (totalWeight === 0) return null; // No comments to select
-
-    const randomValue = Math.random() * totalWeight;
-
-    // Binary search to find the comment corresponding to the random value
-    let low = 0;
-    let high = cumulativeWeights.length - 1;
-    let selectedIndex = 0;
-
-    while (low <= high) {
-      const mid = Math.floor((low + high) / 2);
-      if (randomValue < cumulativeWeights[mid]) {
-        selectedIndex = mid;
-        high = mid - 1;
-      } else {
-        low = mid + 1;
-      }
-    }
-
-    return comments.filter(comment => comment.score > 0)[selectedIndex] || null;
-  };
-
-  // Initialize flying items with a limited number of comments
-  useEffect(() => {
-    const initialItems = [];
-    for (let i = 0; i < Math.min(MAX_FLYING_ITEMS, comments.length); i++) {
-      const comment = selectWeightedRandomComment();
-      if (comment) {
-        initialItems.push(createFlyingItem(comment));
-      }
-    }
-    setFlyingItems(initialItems);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cumulativeWeights, totalWeight, comments]);
-
-  // Function to create a flying item with randomized properties
   function createFlyingItem(comment) {
-    const topPercent = Math.random() * 80; // Random vertical position between 0-80%
+    const topPercent = Math.random() * 80; // Random vertical position
     const minFont = 16;
     const maxFont = 42;
     const fontSize = Math.floor(Math.random() * (maxFont - minFont + 1)) + minFont;
     const duration = Math.floor(Math.random() * 7) + 4; // Random duration between 4-10 seconds
     const uniqueKey = `${comment.id}-${Math.random()}`; // Unique key
+    console.log(`Created flying item: ${uniqueKey}`);
     return {
       originalComment: comment,
       uniqueKey,
@@ -85,16 +30,12 @@ function RandomMode({ comments, badAppleActive }) {
     };
   }
 
-  // Handler to replace a flying item when its animation ends
   const handleAnimationEnd = (index) => {
+    console.log(`Animation ended for item index: ${index}`);
     setFlyingItems((prev) => {
       const oldItem = prev[index];
       if (!oldItem) return prev;
-
-      const newComment = selectWeightedRandomComment();
-      if (!newComment) return prev; // No comment to replace with
-
-      const newItem = createFlyingItem(newComment);
+      const newItem = createFlyingItem(oldItem.originalComment); // Replace finished item
       const newArray = [...prev];
       newArray[index] = newItem;
       return newArray;
