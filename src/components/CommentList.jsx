@@ -1,35 +1,32 @@
 import React from 'react';
-import SafeHtml from './SafeHtml'; // Import the SafeHtml component
+import Comment from './Comment';
+import PropTypes from 'prop-types';
 
-function CommentList({ comments }) {
+function CommentList({ comments, deviceId }) {
   if (!comments || comments.length === 0) {
-    return <p className="p-4 text-black">No comments yet...</p>;
+    return <p className="p-4 text-center text-gray-500">No comments yet...</p>;
   }
 
   return (
-    <div className="p-4">
-      {comments.map((comment) => {
-        const dateObj = comment.timestamp ? comment.timestamp.toDate() : new Date();
-        const formattedDate = dateObj.toLocaleString();
-
-        // Format content with HTML
-        const contentWithHtml = `<strong>${comment.name || 'Anonymous'}</strong>, ${formattedDate}`;
-
-        return (
-          <div
-            key={comment.id}
-            className="bg-gray-100 border border-gray-300 rounded p-4 my-2 text-black"
-          >
-            <h3 className="font-semibold mb-1">
-              <SafeHtml html={contentWithHtml} />
-            </h3>
-            {/* Render sanitized HTML */}
-            <SafeHtml html={comment.content || ''} />
-          </div>
-        );
-      })}
+    <div className="space-y-6 p-4">
+      {comments.map((comment) => (
+        <Comment key={comment.id} comment={comment} deviceId={deviceId} />
+      ))}
     </div>
   );
 }
+
+CommentList.propTypes = {
+  comments: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      name: PropTypes.string,
+      content: PropTypes.string,
+      timestamp: PropTypes.object,
+      score: PropTypes.number,
+    })
+  ).isRequired,
+  deviceId: PropTypes.string.isRequired, 
+};
 
 export default CommentList;

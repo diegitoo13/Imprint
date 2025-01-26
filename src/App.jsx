@@ -3,6 +3,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import CommentModal from './components/CommentModal';
 import CommentList from './components/CommentList';
+import BadAppleASCII from './components/BadAppleASCII'; 
 import RandomMode from './components/RandomMode';
 
 import { db } from './firebase';
@@ -15,15 +16,27 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 
+import { getDeviceId } from './utils/deviceId'; // Import the device ID utility
+
 function App() {
   const [comments, setComments] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState('random'); // Default mode: random
-  const [badAppleActive, setBadAppleActive] = useState(false); // Controls Bad Apple state
+  const [viewMode, setViewMode] = useState('random'); // default to random
+  const [badAppleActive, setBadAppleActive] = useState(false); // State to control Bad Apple
+  const [deviceId, setDeviceId] = useState(null); // Device ID state
 
-  // Real-time Firestore listener for comments
+  // Initialize Device ID on component mount
   useEffect(() => {
-    const q = query(collection(db, 'comments'), orderBy('timestamp', 'desc'));
+    const id = getDeviceId();
+    setDeviceId(id);
+  }, []);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, 'comments'),
+      orderBy('score', 'desc'), 
+      orderBy('timestamp', 'desc') 
+    );
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedComments = snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -35,31 +48,31 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // Add a new comment
+  // Handle new comment
   const handleSubmitComment = async (name, content) => {
     try {
       await addDoc(collection(db, 'comments'), {
         name,
         content,
         timestamp: serverTimestamp(),
+        score: 0, // Initialize score
       });
       setModalOpen(false);
     } catch (error) {
       console.error('Error adding comment:', error);
+      alert('Failed to submit comment.');
     }
   };
 
-  // Toggle between random and list view
+  // Toggle random vs list mode
   const toggleMode = () => {
     setViewMode((prev) => (prev === 'random' ? 'list' : 'random'));
   };
 
-  // Trigger Bad Apple Easter Egg
+  // Handler to activate Bad Apple
   const handleBadApple = () => {
-    console.log('Bad Apple Easter Egg Activated!');
     setBadAppleActive(true);
   };
-  
 
   return (
     <div className="flex flex-col min-h-screen text-black relative">
@@ -74,12 +87,12 @@ function App() {
       {viewMode === 'random' ? (
         <RandomMode comments={comments} badAppleActive={badAppleActive} />
       ) : (
-        <CommentList comments={comments} />
+        <CommentList comments={comments} deviceId={deviceId} />
       )}
 
       <Footer />
 
-      {/* Modal for adding a new comment */}
+      {/* Modal for new comment */}
       <CommentModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
