@@ -16,7 +16,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 
-import { getDeviceId } from './utils/deviceId'; // Import the device ID utility
+import { getDeviceId } from './utils/deviceId'; 
 
 function App() {
   const [comments, setComments] = useState([]);
@@ -56,6 +56,7 @@ function App() {
         content,
         timestamp: serverTimestamp(),
         score: 0, // Initialize score
+        deviceId, // Associate comment with deviceId
       });
       setModalOpen(false);
     } catch (error) {
