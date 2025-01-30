@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { doc, setDoc, onSnapshot, updateDoc, increment, deleteDoc } from 'firebase/firestore';
+import SafeHtml from './SafeHtml'; 
 import { db } from '../firebase'; 
 import PropTypes from 'prop-types';
 
@@ -85,7 +86,7 @@ function Comment({ comment, deviceId }) {
 
       {/* Comment Content */}
       <p className="text-sm md:text-base text-gray-700 mt-2">
-        {content || ''}
+        <SafeHtml html={textWithAuthor} /> 
       </p>
 
       {/* Voting Section */}
